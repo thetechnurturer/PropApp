@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Property {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  yearBuilt Int?
+  street    String
+  city      String
+  state     String
+  zip       String
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  units      Unit[]
+  leases     Lease[]
+  workOrders WorkOrder[]
+}
+
+model Unit {
+  id         String   @id @default(cuid())
+  propertyId String
+  unitNumber String
+  bedrooms   Int?
+  bathrooms  Float?
+  sqft       Int?
+  rentAmount Float?
+  status     String   @default("vacant")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  leases     Lease[]
+  workOrders WorkOrder[]
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+  employer  String?
+  notes     String?
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leases Lease[]
+}
+
+model Lease {
+  id              String    @id @default(cuid())
+  propertyId      String
+  unitId          String?
+  tenantId        String
+  startDate       DateTime
+  endDate         DateTime?
+  monthlyRent     Float
+  securityDeposit Float?
+  rentDueDay      Int       @default(1)
+  status          String    @default("active")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id])
+  unit     Unit?    @relation(fields: [unitId], references: [id])
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model WorkOrder {
+  id          String    @id @default(cuid())
+  title       String
+  propertyId  String
+  unitId      String?
+  category    String
+  priority    String    @default("medium")
+  description String?
+  assignee    String?
+  dueDate     DateTime?
+  status      String    @default("open")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id])
+  unit     Unit?    @relation(fields: [unitId], references: [id])
+}
